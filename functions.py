@@ -9,12 +9,16 @@ def chance_that_true(probability):
 
 
 def random_duration(average):
-    sigma = 0.00002 * average
+    sigma = 0.2 * average # change 0.2 to 0.0000002 if you want to have only the average as output
     s = max(round(np.random.normal(average, sigma)), 1)
     return s
 
 
-def list_of_normal_new_cases(ic_patients, days, mu=0, sigma=1, sigma_multiplier=3):
+def list_of_normal_new_cases(ic_patients, ##INPUT
+                             days, ##INPUT
+                             mu=0,
+                             sigma=1,
+                             sigma_multiplier=3):
     print(f'IC patients = {ic_patients}')
     effective_sigma = sigma * sigma_multiplier
     x = np.linspace(-effective_sigma, effective_sigma, days)
@@ -33,7 +37,12 @@ def list_of_normal_new_cases(ic_patients, days, mu=0, sigma=1, sigma_multiplier=
     return y_round
 
 
-def list_of_logistic_new_cases(ic_patients, days, mu=0, sigma=1, sigma_multiplier=3):
+def list_of_logistic_new_cases(ic_patients,  ## INPUT
+                               days,  ## INPUT
+                               mu=0,
+                               sigma=1,
+                               sigma_multiplier=3  ## INPUT but not necessary
+                               ):
     print(f'IC patients = {ic_patients}')
     effective_sigma = 2 * sigma * sigma_multiplier
     x = np.linspace(-effective_sigma, effective_sigma, days)
@@ -51,14 +60,16 @@ def list_of_logistic_new_cases(ic_patients, days, mu=0, sigma=1, sigma_multiplie
 
     return y_round
 
+
 def list_of_real_predicted_new_cases():
-    worst = 0.11
-    medium = worst / 2
-    best = worst / 3
-    plot_days = 50
-    scenarios = {'worst': [{'duration': 10, 'growth': 10 ** worst}, {'duration': plot_days - 10, 'growth': 10 ** worst}],
-                 'medium': [{'duration': 5, 'growth': 10 ** worst}, {'duration': plot_days - 5, 'growth': 10 ** medium}],
-                 'best': [{'duration': 3, 'growth': 10 ** worst}, {'duration': plot_days - 3, 'growth': 10 ** best}]}
+    worst = 0.11  ## INPUT
+    medium = worst / 2  ## INPUT
+    best = worst / 3  ## INPUT
+    plot_days = 50  ## INPUT length of plot
+    scenarios = {
+        'worst': [{'duration': 10, 'growth': 10 ** worst}, {'duration': plot_days - 10, 'growth': 10 ** worst}],
+        'medium': [{'duration': 5, 'growth': 10 ** worst}, {'duration': plot_days - 5, 'growth': 10 ** medium}],
+        'best': [{'duration': plot_days, 'growth': 10 ** best}]}  ## INPUT
     actual_ic_df = fetch_actual_ic_df()
     predicted_ic_df = plot_future(actual_ic_df, pivots=scenarios['best'])
     predicted_ic_df['new_ic'] = predicted_ic_df['number'].diff().fillna(0)
@@ -92,7 +103,6 @@ def plot_future(df_ic, pivots=[{'duration': 10, 'growth': 1.25},
     df_ic['date'] = pd.date_range(start=first_date, end=first_date + dt.timedelta(days=days + total_predicted_days - 1))
 
     return df_ic
-
 
 # first = 3
 

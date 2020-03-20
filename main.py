@@ -4,10 +4,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from classes import *
 
-beds = 2000
-ic_death_rat = 0.1
-days_to_better = 15
-days_to_dead = 10
+beds = 930
+ic_death_rat = 15/57
+days_to_better = 21
+days_to_dead = 14
 
 ## option 1: real and predicted data
 y_round, days = list_of_real_predicted_new_cases()
@@ -27,8 +27,9 @@ hospitals = Hospitals(beds=beds, ic_death_rat=ic_death_rat, days_to_better=days_
 for new_cases in y_round:
     hospitals.leave_hospital()
     hospitals.new_patients(new_cases)
-    hospitals.add_day()
     hospitals.log_day()
+    hospitals.add_day()
+
 
 
 hospitals.plot_log(log=True, map_days=True, start_day='21-02-2020', day_zero=dt.date.today())

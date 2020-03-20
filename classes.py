@@ -29,6 +29,7 @@ class Hospitals:
         self.current_new_ic = 0
         self.cummulative_cases = 0
         self.cummulative_no_space = 0
+        self.cummulative_dead_from_ic = 0
 
     # def ic_current_len(self):
     #     for entry in self.ic_patients:
@@ -51,8 +52,6 @@ class Hospitals:
         self.generate_unplaceble_patients(max(0, new_cases - placeble_patients))
 
     def generate_placeble_patients(self, placeble_patients):
-        # to_die_patients = int(round(placeble_patients / 2 + 0.1)) if true_or_false(0.5) else int(
-        #     round(placeble_patients / 2 - 0.1))
         to_die_patients = len([1 for i in range(placeble_patients) if chance_that_true(self.ic_death_rat)])
         to_live_patients = placeble_patients - to_die_patients
 
@@ -72,13 +71,6 @@ class Hospitals:
                      'end_day': [self.day + random_duration(average=self.days_to_better) for i in
                                  range(to_live_patients)],
                      'alive': [True for i in range(to_live_patients)]}
-        # self.ic_patients_df = self.ic_patients_df.append({'status': ['in_ic' for i in range(to_live_patients)],
-        #                             'will_die': [False for i in range(to_live_patients)],
-        #                             'init_day': [self.day for i in range(to_live_patients)],
-        #                             'end_day': [self.day + random_duration(average=self.days_to_better) for i in
-        #                                         range(to_live_patients)],
-        #                             'alive': [True for i in range(to_live_patients)]}, ignore_index=True)
-
         self.ic_patients_df = self.ic_patients_df.append(pd.DataFrame.from_dict(dict_live, orient='index').transpose(),
                                                          ignore_index=True)
 
@@ -161,19 +153,18 @@ class Hospitals:
                 (self.ic_patients_df['status'] == 'in_ic') & (self.ic_patients_df['will_die'] == False) & (
                         self.ic_patients_df['end_day'] == self.day), ['status', 'alive']] = ['better_from_ic', True]
 
-        # self.ic_patients_df[(self.ic_patients_df['status'] == 'in_ic') & (self.ic_patients_df['will_die'] == False) & (
-        #         self.ic_patients_df['end_day'] == self.day)][['status', 'alive']] = ['better_from_ic', True]
-
     def add_day(self):
         self.day += 1
-        self.cummulative_cases += self.current_new_cases
-        self.cummulative_no_space += self.current_no_space
+
         self.current_no_space = 0
         self.current_new_ic = 0
         # print(f'day {self.day}      {self.current_new_cases}    {self.current_ic}  }')
         print(f'day {self.day}')
 
     def log_day(self):
+        self.cummulative_cases += self.current_new_cases
+        self.cummulative_no_space += self.current_no_space
+        self.cummulative_dead_from_ic += self.current_dead_from_ic
         log_dict = {
             'current_ic': self.current_ic,
             'no_space_per_day': self.current_no_space,
@@ -181,7 +172,8 @@ class Hospitals:
             'current_dead_from_ic': self.current_dead_from_ic,
             'new_cases': self.current_new_cases,
             'cummulative_cases': self.cummulative_cases,
-            'cummulative_no_space': self.cummulative_no_space
+            'cummulative_no_space': self.cummulative_no_space,
+            'cummulative_dead_from_ic': self.cummulative_dead_from_ic
         }
         self.log_df = self.log_df.append(log_dict, ignore_index=True)
 
@@ -202,15 +194,29 @@ class Hospitals:
         fig, ax = plt.subplots(dpi=300)
         days = np.arange(self.day)
         if map_days:
-            days = days - (pd.to_datetime(day_zero) - pd.to_datetime(start_day)).days
+            days = days - (pd.to_datetime(day_zero) - pd.to_datetime(start_day)).days + 1
 
         for column in self.log_df.columns:
             ax.plot(days, self.log_df[column],    linewidth=2, label=column)
         if log:
             ax.set_yscale('log')
-        plt.legend()
-        ax.set_xticks(days, minor=True)
-        ax.grid(which='both')
+        ax.legend()
+        # ax.set_xticks(days, minor=True)
+        # ax.grid(which='both')
+        # grid(b=True, which='major')
+        # ax.grid(b=False, which='minor')
+
+        # Don't allow the axis to be on top of your data
+        ax.set_axisbelow(True)
+
+        # Turn on the minor TICKS, which are required for the minor GRID
+        ax.minorticks_on()
+
+        # Customize the major grid
+        ax.grid(which='major',linestyle='-')
+        # Customize the minor grid
+        ax.grid(which='minor',linestyle=':')
+
         # fig.autofmt_xdate()
         plt.show()
 
